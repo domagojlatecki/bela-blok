@@ -53,6 +53,10 @@
                 color: #761318;
             }
 
+            .total-points-small {
+                font-size: 0.9rem;
+            }
+
             .new-game {
                 width: 100%;
                 height: 20%;
@@ -79,6 +83,11 @@
 
             .team-wins {
                 font-size: 0.4rem;
+                color: #004d23;
+            }
+
+            .point-diff {
+                font-size: 0.3rem;
                 color: #004d23;
             }
 
@@ -175,14 +184,18 @@
             </div>
             <table width="100%" height="20%" class="full-size-font">
                 <tr>
-                    <td id="us-total" colspan="3" class="total-points">0</td>
-                    <td id="them-total" colspan="3" class="total-points">0</td>
+                    <td id="us-missing" colspan="2" class="point-diff">0</td>
+                    <td id="us-total" colspan="5" class="total-points">0</td>
+                    <td id="team-diff" colspan="2" class="point-diff">0</td>
+                    <td id="them-total" colspan="5" class="total-points">0</td>
+                    <td id="them-missing" colspan="2" class="point-diff">0</td>
                 </tr>
                 <tr>
-                    <td id="us-wins" colspan="1" class="team-wins">0</td>
-                    <td colspan="2" class="team-name">MI</td>
-                    <td colspan="2" class="team-name">VI</td>
-                    <td id="them-wins" colspan="1" class="team-wins">0</td>
+                    <td id="us-wins" colspan="3" class="team-wins">0</td>
+                    <td colspan="5" class="team-name">MI</td>
+                    <td colspan="1"></td>
+                    <td colspan="5" class="team-name">VI</td>
+                    <td id="them-wins" colspan="3" class="team-wins">0</td>
                 </tr>
             </table>
             <table class="new-game" onclick="newGame();">
@@ -401,6 +414,18 @@
             localStorage.setItem("themWins", document.getElementById("them-wins").innerHTML);
         }
 
+        function setPointsAndAdjustSize(id, value) {
+            var element = document.getElementById(id);
+
+            if (value < 1000) {
+                element.classList.remove("total-points-small");
+            } else if (!element.classList.contains("total-points-small")) {
+                element.classList.add("total-points-small");
+            }
+
+            element.innerHTML = String(value);
+        }
+
         function victory(who) {
             var elem = document.getElementById(who + "-wins");
             elem.innerHTML = Number(elem.innerHTML) + 1;
@@ -408,8 +433,11 @@
             pointHistory = [];
             var table = document.getElementById("history-table");
             table.innerHTML = "";
-            document.getElementById("us-total").innerHTML = "0";
-            document.getElementById("them-total").innerHTML = "0";
+            setPointsAndAdjustSize("us-total", 0);
+            setPointsAndAdjustSize("them-total", 0);
+            document.getElementById("us-missing").innerHTML = "1001";
+            document.getElementById("them-missing").innerHTML = "1001";
+            document.getElementById("team-diff").innerHTML = "0";
         }
 
         function deleteGame() {
@@ -441,8 +469,11 @@
                 themTotal += h.them.points + h.them.contract;
             });
 
-            document.getElementById("us-total").innerHTML = String(usTotal);
-            document.getElementById("them-total").innerHTML = String(themTotal);
+            setPointsAndAdjustSize("us-total", usTotal);
+            setPointsAndAdjustSize("them-total", themTotal);
+            document.getElementById("us-missing").innerHTML = String(1001 - usTotal);
+            document.getElementById("them-missing").innerHTML = String(1001 - themTotal);
+            document.getElementById("team-diff").innerHTML = String(Math.abs(usTotal - themTotal));
             document.getElementById("point-entry").hidden = true;
             document.getElementById("overview").hidden = false;
         }
@@ -495,8 +526,11 @@
             } else if (themTotal > usTotal && themTotal >= 1001) {
                 victory("them");
             } else {
-                document.getElementById("us-total").innerHTML = String(usTotal);
-                document.getElementById("them-total").innerHTML = String(themTotal);
+                setPointsAndAdjustSize("us-total", usTotal);
+                setPointsAndAdjustSize("them-total", themTotal);
+                document.getElementById("us-missing").innerHTML = String(1001 - usTotal);
+                document.getElementById("them-missing").innerHTML = String(1001 - themTotal);
+                document.getElementById("team-diff").innerHTML = String(Math.abs(usTotal - themTotal));
             }
             
             document.getElementById("point-entry").hidden = true;
@@ -559,8 +593,11 @@
                 themTotal += h.them.points + h.them.contract;
             });
 
-            document.getElementById("us-total").innerHTML = String(usTotal);
-            document.getElementById("them-total").innerHTML = String(themTotal);
+            setPointsAndAdjustSize("us-total", usTotal);
+            setPointsAndAdjustSize("them-total", themTotal);
+            document.getElementById("us-missing").innerHTML = String(1001 - usTotal);
+            document.getElementById("them-missing").innerHTML = String(1001 - themTotal);
+            document.getElementById("team-diff").innerHTML = String(Math.abs(usTotal - themTotal));
             document.getElementById("us-wins").innerHTML = localStorage.getItem("usWins") || "0";
             document.getElementById("them-wins").innerHTML = localStorage.getItem("themWins") || "0";
         }
@@ -599,8 +636,11 @@
                 pointHistory = [];
                 var table = document.getElementById("history-table");
                 table.innerHTML = "";
-                document.getElementById("us-total").innerHTML = "0";
-                document.getElementById("them-total").innerHTML = "0";
+                setPointsAndAdjustSize("us-total", 0);
+                setPointsAndAdjustSize("them-total", 0);
+                document.getElementById("us-missing").innerHTML = "1001";
+                document.getElementById("them-missing").innerHTML = "1001";
+                document.getElementById("team-diff").innerHTML = "0";
             }
 
             if (onOptionsExit.clearScore) {
