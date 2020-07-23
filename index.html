@@ -170,7 +170,7 @@
                     <circle cx="150" cy="256" r="80" fill="currentColor"/>
                 </svg>
             </div>
-            <div class="history">
+            <div id="history-div" class="history">
                 <table id="history-table" width="100%" class="full-size-font"></table>
             </div>
             <table width="100%" height="20%" class="full-size-font">
@@ -501,6 +501,10 @@
             
             document.getElementById("point-entry").hidden = true;
             document.getElementById("overview").hidden = false;
+
+            var historyDiv = document.getElementById("history-div");
+            historyDiv.scrollTop = historyDiv.scrollHeight;
+
             storeState();
         }
 
