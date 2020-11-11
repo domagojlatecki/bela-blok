@@ -145,12 +145,12 @@
 
             .options-button {
                 width: 100%;
-                height: 20%;
+                height: 15%;
                 background: #004d23;
                 color: #ffffff;
                 text-align: center;
                 vertical-align: center;
-                font-size: 0.75rem;
+                font-size: 0.5rem;
             }
 
             .options-divider {
@@ -161,7 +161,7 @@
 
             .options-filler {
                 width: 100%;
-                height: 15%;
+                height: 10%;
                 background: #ffffff;
             }
         </style>
@@ -229,6 +229,17 @@
                 </tr>
             </table>
             <div class="options-divider"></div>
+            <table class="options-button">
+                <tr>
+                    <td colspan="4">Igra</td>
+                </tr>
+                <tr>
+                    <td id="options-target-score-301" onclick="stageTargetScore(301);">301</td>
+                    <td id="options-target-score-501" onclick="stageTargetScore(501);">501</td>
+                    <td id="options-target-score-701" onclick="stageTargetScore(701);">701</td>
+                    <td id="options-target-score-1001" onclick="stageTargetScore(1001);">1001</td>
+                </tr>
+            </table>
             <div class="options-filler"></div>
             <table width="100%" height="25%" class="full-size-font">
                 <tr>
@@ -311,6 +322,7 @@
         var leader = "";
         var currentGameId = 0;
         var pointHistory = [];
+        var targetScore = 1001;
         var onOptionsExit = {
             clearPoints: false,
             clearScore: false
@@ -346,7 +358,7 @@
         }
 
         function setPoints(value) {
-            var v = Math.min(value, 1001);
+            var v = Math.min(value, targetScore);
 
             if (selectedField.indexOf("points") !== -1) {
                 document.getElementById(selectedField).innerHTML = v;
@@ -413,6 +425,7 @@
             localStorage.setItem("pointHistory", JSON.stringify(pointHistory));
             localStorage.setItem("usWins", document.getElementById("us-wins").innerHTML);
             localStorage.setItem("themWins", document.getElementById("them-wins").innerHTML);
+            localStorage.setItem("targetScore", targetScore);
         }
 
         function setPointsAndAdjustSize(id, value) {
@@ -436,9 +449,23 @@
             table.innerHTML = "";
             setPointsAndAdjustSize("us-total", 0);
             setPointsAndAdjustSize("them-total", 0);
-            document.getElementById("us-missing").innerHTML = "1001";
-            document.getElementById("them-missing").innerHTML = "1001";
+            document.getElementById("us-missing").innerHTML = String(targetScore);
+            document.getElementById("them-missing").innerHTML = String(targetScore);
             document.getElementById("team-diff").innerHTML = "0";
+        }
+
+        function updateScoreboard(usTotal, themTotal) {
+            if (usTotal > themTotal && usTotal >= targetScore) {
+                victory("us");
+            } else if (themTotal > usTotal && themTotal >= targetScore) {
+                victory("them");
+            } else {
+                setPointsAndAdjustSize("us-total", usTotal);
+                setPointsAndAdjustSize("them-total", themTotal);
+                document.getElementById("us-missing").innerHTML = String(targetScore - usTotal);
+                document.getElementById("them-missing").innerHTML = String(targetScore - themTotal);
+                document.getElementById("team-diff").innerHTML = String(Math.abs(usTotal - themTotal));
+            }
         }
 
         function deleteGame() {
@@ -472,8 +499,8 @@
 
             setPointsAndAdjustSize("us-total", usTotal);
             setPointsAndAdjustSize("them-total", themTotal);
-            document.getElementById("us-missing").innerHTML = String(1001 - usTotal);
-            document.getElementById("them-missing").innerHTML = String(1001 - themTotal);
+            document.getElementById("us-missing").innerHTML = String(targetScore - usTotal);
+            document.getElementById("them-missing").innerHTML = String(targetScore - themTotal);
             document.getElementById("team-diff").innerHTML = String(Math.abs(usTotal - themTotal));
             document.getElementById("point-entry").hidden = true;
             document.getElementById("overview").hidden = false;
@@ -522,17 +549,7 @@
                 themTotal += h.them.points + h.them.contract;
             });
 
-            if (usTotal > themTotal && usTotal >= 1001) {
-                victory("us");
-            } else if (themTotal > usTotal && themTotal >= 1001) {
-                victory("them");
-            } else {
-                setPointsAndAdjustSize("us-total", usTotal);
-                setPointsAndAdjustSize("them-total", themTotal);
-                document.getElementById("us-missing").innerHTML = String(1001 - usTotal);
-                document.getElementById("them-missing").innerHTML = String(1001 - themTotal);
-                document.getElementById("team-diff").innerHTML = String(Math.abs(usTotal - themTotal));
-            }
+            updateScoreboard(usTotal, themTotal);
             
             document.getElementById("point-entry").hidden = true;
             document.getElementById("overview").hidden = false;
@@ -573,6 +590,7 @@
         function loadGame() {
             pointHistory = JSON.parse(localStorage.getItem("pointHistory") || "[]");
             currentGameId = pointHistory.length;
+            targetScore = localStorage.getItem("targetScore") || 1001;
 
             var table = document.getElementById("history-table");
             table.innerHTML = "";
@@ -596,8 +614,8 @@
 
             setPointsAndAdjustSize("us-total", usTotal);
             setPointsAndAdjustSize("them-total", themTotal);
-            document.getElementById("us-missing").innerHTML = String(1001 - usTotal);
-            document.getElementById("them-missing").innerHTML = String(1001 - themTotal);
+            document.getElementById("us-missing").innerHTML = String(targetScore - usTotal);
+            document.getElementById("them-missing").innerHTML = String(targetScore - themTotal);
             document.getElementById("team-diff").innerHTML = String(Math.abs(usTotal - themTotal));
             document.getElementById("us-wins").innerHTML = localStorage.getItem("usWins") || "0";
             document.getElementById("them-wins").innerHTML = localStorage.getItem("themWins") || "0";
@@ -606,11 +624,13 @@
         function showOptions() {
             onOptionsExit = {
                 clearPoints: false,
-                clearScore: false
+                clearScore: false,
+                setTargetScore: targetScore
             };
 
             document.getElementById("options-points").innerHTML = "[" + document.getElementById("us-total").innerHTML + " - " + document.getElementById("them-total").innerHTML + "]";
             document.getElementById("options-score").innerHTML = "[" + document.getElementById("us-wins").innerHTML + " - " + document.getElementById("them-wins").innerHTML + "]";
+            document.getElementById("options-target-score-" + targetScore).innerHTML = "[" + targetScore + "]";
 
             document.getElementById("options").hidden = false;
             document.getElementById("overview").hidden = true;
@@ -626,12 +646,21 @@
             onOptionsExit.clearScore = true;
         }
 
+        function stageTargetScore(newTargetScore) {
+            document.getElementById("options-target-score-" + onOptionsExit.setTargetScore).innerHTML = String(onOptionsExit.setTargetScore);
+            document.getElementById("options-target-score-" + newTargetScore).innerHTML = "[" + newTargetScore + "]";
+            onOptionsExit.setTargetScore = newTargetScore;
+        }
+
         function cancelOptions() {
+            document.getElementById("options-target-score-" + onOptionsExit.setTargetScore).innerHTML = String(onOptionsExit.setTargetScore);
             document.getElementById("options").hidden = true;
             document.getElementById("overview").hidden = false;
         }
 
         function acceptOptions() {
+            document.getElementById("options-target-score-" + onOptionsExit.setTargetScore).innerHTML = String(onOptionsExit.setTargetScore);
+
             if (onOptionsExit.clearPoints) {
                 currentGameId = 0;
                 pointHistory = [];
@@ -639,14 +668,21 @@
                 table.innerHTML = "";
                 setPointsAndAdjustSize("us-total", 0);
                 setPointsAndAdjustSize("them-total", 0);
-                document.getElementById("us-missing").innerHTML = "1001";
-                document.getElementById("them-missing").innerHTML = "1001";
+                document.getElementById("us-missing").innerHTML = String(targetScore);
+                document.getElementById("them-missing").innerHTML = String(targetScore);
                 document.getElementById("team-diff").innerHTML = "0";
             }
 
             if (onOptionsExit.clearScore) {
                 document.getElementById("us-wins").innerHTML = "0";
                 document.getElementById("them-wins").innerHTML = "0";
+            }
+
+            if (targetScore !== onOptionsExit.setTargetScore) {
+                targetScore = onOptionsExit.setTargetScore;
+                usTotal = Number(document.getElementById("us-total").innerHTML);
+                themTotal = Number(document.getElementById("them-total").innerHTML);
+                updateScoreboard(usTotal, themTotal);
             }
 
             storeState();
